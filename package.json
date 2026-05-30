@@ -1,0 +1,9 @@
+{
+  "name": "birdquest",
+  "private": true,
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {},
+  "engines": {
+    "node": ">=20"
+  }
+}

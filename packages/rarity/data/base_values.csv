@@ -1,0 +1,55 @@
+species_code,common_name,base_value
+houspa,House Sparrow,2
+eursta,European Starling,2
+woodpi,Common Wood-Pigeon,2
+blabbi,Eurasian Blackbird,3
+blutit,Eurasian Blue Tit,3
+gretit,Great Tit,3
+eurrob,European Robin,3
+eurwre,Eurasian Wren,3
+dunher,Dunnock,3
+magpie,Eurasian Magpie,4
+carcar,Carrion Crow,4
+jackda,Eurasian Jackdaw,4
+comdov,Common Rock Dove,2
+blaheg,Black-headed Gull,5
+hergul,European Herring Gull,5
+cormo1,Great Cormorant,8
+gryhea,Grey Heron,8
+moopie,Eurasian Moorhen,6
+coofoo,Eurasian Coot,6
+mallar,Mallard,4
+swagoo,Greylag Goose,6
+mutswa,Mute Swan,8
+canago,Canada Goose,5
+grechi,Great Spotted Woodpecker,12
+greyas,Green Woodpecker,15
+eutnul,Eurasian Nuthatch,12
+eurtre,Eurasian Treecreeper,12
+lontit,Long-tailed Tit,8
+golcre,Goldcrest,10
+eurjay,Eurasian Jay,8
+sontra,Song Thrush,6
+misthr,Mistle Thrush,10
+goldfn,European Goldfinch,5
+bullfn,Eurasian Bullfinch,15
+siskin,Eurasian Siskin,12
+eurkes,Common Kestrel,18
+eurspa,Eurasian Sparrowhawk,18
+combuz,Common Buzzard,15
+redkit,Red Kite,20
+perefl,Peregrine Falcon,50
+kinged,Common Kingfisher,35
+eurott,Eurasian Otter,30
+litowl,Little Owl,30
+barnow,Barn Owl,40
+tawowl,Tawny Owl,35
+curlew,Eurasian Curlew,25
+oyscat,Eurasian Oystercatcher,15
+lapwng,Northern Lapwing,18
+skylar,Eurasian Skylark,12
+cuckoo,Common Cuckoo,30
+hoopoe,Eurasian Hoopoe,85
+golori,Eurasian Golden Oriole,80
+waxwng,Bohemian Waxwing,60
+whoswn,Whooper Swan,35

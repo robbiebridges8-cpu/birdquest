@@ -1,0 +1,27 @@
+node_modules/
+.expo/
+dist/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Data files (large, not committed)
+packages/rarity/data/*.txt
+packages/rarity/data/*.txt.gz
+packages/rarity/data/*.csv
+!packages/rarity/data/base_values.csv
+packages/rarity/data/*.parquet
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
