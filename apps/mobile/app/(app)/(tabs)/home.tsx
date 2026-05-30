@@ -54,7 +54,7 @@ export default function HomeScreen() {
         <View style={{ flex: 1 }} />
 
         <Pressable
-          onPress={() => router.push("/record")}
+          onPress={() => router.push("/(app)/record")}
           style={{ width: "100%", backgroundColor: "#16a34a", borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 32 }}
         >
           <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>

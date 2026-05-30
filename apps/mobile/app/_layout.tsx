@@ -12,13 +12,6 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="auth" />
           <Stack.Screen name="(app)" />
-          <Stack.Screen
-            name="record"
-            options={{
-              presentation: "modal",
-              animation: "slide_from_bottom",
-            }}
-          />
         </Stack>
       </AuthProvider>
     </QueryClientProvider>

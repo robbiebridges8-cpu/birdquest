@@ -1,5 +1,4 @@
-import { Tabs, Redirect } from "expo-router";
-import { Text } from "react-native";
+import { Stack, Redirect } from "expo-router";
 import { useAuth } from "@/lib/auth-context";
 
 export default function AppLayout() {
@@ -9,43 +8,15 @@ export default function AppLayout() {
   if (!user) return <Redirect href="/auth/login" />;
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: "#16a34a",
-        tabBarInactiveTintColor: "#9ca3af",
-        tabBarStyle: {
-          borderTopColor: "#e5e7eb",
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="home"
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen
+        name="record"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 20, color }}>🏠</Text>
-          ),
+          presentation: "modal",
+          animation: "slide_from_bottom",
         }}
       />
-      <Tabs.Screen
-        name="feed"
-        options={{
-          title: "Feed",
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 20, color }}>📋</Text>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 20, color }}>👤</Text>
-          ),
-        }}
-      />
-    </Tabs>
+    </Stack>
   );
 }
