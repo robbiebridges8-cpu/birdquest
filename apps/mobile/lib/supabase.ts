@@ -6,6 +6,13 @@ import type { Database } from "@birdquest/shared";
 const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl as string;
 const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey as string;
 
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    "Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. " +
+    "Copy .env.example to .env.local and fill in your Supabase project values."
+  );
+}
+
 // expo-secure-store has a 2048-byte limit per key.
 // Supabase sessions can exceed this, so we chunk the value across multiple keys.
 const ExpoSecureStoreAdapter = {

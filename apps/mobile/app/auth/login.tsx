@@ -32,8 +32,9 @@ export default function LoginScreen() {
       setLoading(false);
       if (signUpError) {
         setError(signUpError.message);
+      } else {
+        router.replace("/");
       }
-      // Auth listener in context will detect the session and index.tsx will redirect
     } else {
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -42,8 +43,9 @@ export default function LoginScreen() {
       setLoading(false);
       if (signInError) {
         setError(signInError.message);
+      } else {
+        router.replace("/");
       }
-      // Auth listener handles redirect
     }
   }
 
