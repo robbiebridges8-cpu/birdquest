@@ -1,11 +1,8 @@
 /**
- * BirdNET API client.
+ * BirdNET client — talks to the local BirdNET server.
  *
- * Uses the public BirdNET Analyzer API hosted by Cornell Lab.
- * Endpoint: https://api.birdnet.cornell.edu/v1/analyze
- *
- * Accepts audio files (WAV, MP3, FLAC, OGG) up to 15 seconds.
- * Returns species predictions with confidence scores.
+ * The server runs on your Mac at services/birdnet/server.py.
+ * Start it with: cd services/birdnet && uv run python server.py
  */
 
 export interface BirdNetPrediction {
@@ -20,7 +17,9 @@ export interface BirdNetResponse {
   error?: string;
 }
 
-const BIRDNET_API_URL = "https://api.birdnet.cornell.edu/v1/analyze";
+// In dev, the phone hits the Mac's local IP. Update this if your IP changes.
+// TODO: move to env var for production
+const BIRDNET_SERVER_URL = "http://192.168.0.121:8080/analyze";
 
 export async function analyzeBirdAudio(
   audioUri: string,
@@ -29,7 +28,6 @@ export async function analyzeBirdAudio(
 ): Promise<BirdNetResponse> {
   const formData = new FormData();
 
-  // Expo audio records as .m4a — BirdNET accepts this
   const filename = audioUri.split("/").pop() ?? "recording.m4a";
   formData.append("file", {
     uri: audioUri,
@@ -39,59 +37,42 @@ export async function analyzeBirdAudio(
 
   formData.append("lat", latitude.toString());
   formData.append("lon", longitude.toString());
-  // Restrict to likely species for the location/time
-  formData.append("min_conf", "0.1");
 
-  const response = await fetch(BIRDNET_API_URL, {
-    method: "POST",
-    body: formData,
-    headers: {
-      Accept: "application/json",
-    },
-  });
+  try {
+    const response = await fetch(BIRDNET_SERVER_URL, {
+      method: "POST",
+      body: formData,
+    });
 
-  if (!response.ok) {
-    const text = await response.text();
-    return { predictions: [], error: `BirdNET API error: ${response.status} - ${text}` };
-  }
+    if (!response.ok) {
+      const text = await response.text();
+      return { predictions: [], error: `Server error: ${response.status} - ${text}` };
+    }
 
-  const data = await response.json();
+    const data = await response.json();
 
-  // BirdNET response format: { predictions: [{ species, confidence }] }
-  // Normalize to our format
-  if (Array.isArray(data)) {
-    // Some versions return array directly
-    const predictions: BirdNetPrediction[] = data.map((item: Record<string, unknown>) => ({
-      species_code: (item.species_code as string) ?? "",
-      common_name: (item.common_name as string) ?? (item.name as string) ?? "",
-      scientific_name: (item.scientific_name as string) ?? "",
-      confidence: (item.confidence as number) ?? 0,
-    }));
-    return { predictions };
-  }
+    if (data.error) {
+      return { predictions: [], error: data.error };
+    }
 
-  if (data.predictions) {
-    return { predictions: data.predictions };
-  }
-
-  // Handle alternate response shapes
-  if (data.results) {
-    const predictions: BirdNetPrediction[] = Object.entries(
-      data.results as Record<string, Record<string, number>>
-    ).flatMap(([_timeRange, species]) =>
-      Object.entries(species).map(([name, confidence]) => {
-        const [scientific, common] = name.split("_");
-        return {
-          species_code: "",
-          common_name: common ?? name,
-          scientific_name: scientific ?? "",
-          confidence: confidence as number,
-        };
+    const predictions: BirdNetPrediction[] = (data.predictions ?? []).map(
+      (p: { common_name?: string; scientific_name?: string; confidence?: number }) => ({
+        species_code: "",
+        common_name: p.common_name ?? "Unknown",
+        scientific_name: p.scientific_name ?? "",
+        confidence: p.confidence ?? 0,
       })
     );
-    predictions.sort((a, b) => b.confidence - a.confidence);
-    return { predictions };
-  }
 
-  return { predictions: [], error: "Unexpected response format" };
+    return { predictions };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes("Network request failed")) {
+      return {
+        predictions: [],
+        error: "Can't reach BirdNET server. Make sure server.py is running on your Mac (cd services/birdnet && uv run python server.py)",
+      };
+    }
+    return { predictions: [], error: `BirdNET request failed: ${message}` };
+  }
 }
