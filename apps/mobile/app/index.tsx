@@ -7,20 +7,31 @@ export default function Index() {
   const { user, isLoading: authLoading } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
 
+  // Wait for auth to resolve
   if (authLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-surface">
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fafafa" }}>
         <ActivityIndicator size="large" color="#16a34a" />
       </View>
     );
   }
 
+  // Not logged in
   if (!user) {
     return <Redirect href="/auth/login" />;
   }
 
-  // If user has no profile or no username set, send to onboarding
-  if (!profileLoading && profile && !profile.username) {
+  // Wait for profile to load before deciding where to go
+  if (profileLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fafafa" }}>
+        <ActivityIndicator size="large" color="#16a34a" />
+      </View>
+    );
+  }
+
+  // Profile exists but still has the auto-generated placeholder username
+  if (profile && profile.username.startsWith("user_")) {
     return <Redirect href="/auth/onboarding" />;
   }
 

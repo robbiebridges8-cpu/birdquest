@@ -16,7 +16,6 @@ export interface CreateSightingParams {
 export interface SightingResult {
   id: string;
   points_awarded: number;
-  species_common_name?: string;
 }
 
 export async function createSighting(
@@ -24,7 +23,6 @@ export async function createSighting(
 ): Promise<SightingResult> {
   const h3Cell = latLngToCell(params.latitude, params.longitude, 6);
 
-  // PostGIS point format
   const locationWkt = `POINT(${params.longitude} ${params.latitude})`;
 
   const { data, error } = await supabase
@@ -51,10 +49,6 @@ export async function createSighting(
   };
 }
 
-/**
- * Look up a species UUID by common name (fuzzy match).
- * Falls back to exact match on ebird_code if available.
- */
 export async function findSpeciesByName(
   commonName: string
 ): Promise<{ id: string; common_name: string; ebird_code: string } | null> {
@@ -64,7 +58,7 @@ export async function findSpeciesByName(
     .select("id, common_name, ebird_code")
     .ilike("common_name", commonName)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (exact) return exact;
 
@@ -74,14 +68,11 @@ export async function findSpeciesByName(
     .select("id, common_name, ebird_code")
     .ilike("common_name", `%${commonName}%`)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   return partial ?? null;
 }
 
-/**
- * Look up a species by ebird_code.
- */
 export async function findSpeciesByCode(
   ebirdCode: string
 ): Promise<{ id: string; common_name: string; ebird_code: string } | null> {
@@ -90,7 +81,7 @@ export async function findSpeciesByCode(
     .select("id, common_name, ebird_code")
     .eq("ebird_code", ebirdCode)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   return data ?? null;
 }

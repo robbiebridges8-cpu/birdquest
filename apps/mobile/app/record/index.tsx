@@ -18,7 +18,7 @@ type FlowState =
   | { step: "success"; pointsAwarded: number; commonName: string }
   | { step: "error"; message: string };
 
-const RECORDING_DURATION_MS = 12000; // 12 seconds — BirdNET works best with 6-15s
+const RECORDING_DURATION_MS = 12000;
 
 export default function RecordScreen() {
   const router = useRouter();
@@ -26,6 +26,7 @@ export default function RecordScreen() {
   const [state, setState] = useState<FlowState>({ step: "idle" });
   const recordingRef = useRef<Audio.Recording | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stopCalledRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -55,10 +56,11 @@ export default function RecordScreen() {
         playsInSilentModeIOS: true,
       });
 
-      const recording = new Audio.Recording();
-      await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-      await recording.startAsync();
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
       recordingRef.current = recording;
+      stopCalledRef.current = false;
 
       let seconds = 0;
       setState({ step: "recording", seconds: 0 });
@@ -68,7 +70,6 @@ export default function RecordScreen() {
         setState({ step: "recording", seconds });
       }, 1000);
 
-      // Auto-stop after duration
       setTimeout(() => stopRecording(), RECORDING_DURATION_MS);
     } catch (err) {
       setState({ step: "error", message: `Recording failed: ${(err as Error).message}` });
@@ -76,6 +77,10 @@ export default function RecordScreen() {
   }
 
   async function stopRecording() {
+    // Guard against double-stop (auto-stop timer + manual stop)
+    if (stopCalledRef.current) return;
+    stopCalledRef.current = true;
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -86,6 +91,7 @@ export default function RecordScreen() {
 
     try {
       await recording.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
       const uri = recording.getURI();
       recordingRef.current = null;
 
@@ -96,13 +102,11 @@ export default function RecordScreen() {
 
       setState({ step: "analyzing" });
 
-      // Get location
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
       const { latitude, longitude } = location.coords;
 
-      // Send to BirdNET
       const result = await analyzeBirdAudio(uri, latitude, longitude);
 
       if (result.error) {
@@ -133,7 +137,6 @@ export default function RecordScreen() {
     setState({ step: "confirming", prediction, audioUri, lat, lng });
 
     try {
-      // Look up species in our DB
       let species = prediction.species_code
         ? await findSpeciesByCode(prediction.species_code)
         : null;
@@ -142,11 +145,10 @@ export default function RecordScreen() {
       }
 
       if (!species) {
-        setState({ step: "error", message: `Species "${prediction.common_name}" not found in database. The species table may need seeding.` });
+        setState({ step: "error", message: `Species "${prediction.common_name}" not found in database. The species table may need more entries.` });
         return;
       }
 
-      // Determine verification status based on confidence
       const verificationStatus = prediction.confidence >= 0.75 ? "auto_verified" as const : "casual" as const;
 
       const result = await createSighting({
@@ -159,8 +161,8 @@ export default function RecordScreen() {
         verificationStatus,
       });
 
-      // Invalidate profile to update points
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["sightings"] });
 
       setState({
         step: "success",
@@ -176,32 +178,30 @@ export default function RecordScreen() {
     router.back();
   }
 
-  // --- RENDER ---
-
   if (state.step === "idle") {
     return (
-      <SafeAreaView className="flex-1 bg-surface">
-        <View className="flex-1 px-6 pt-4">
-          <Pressable onPress={handleClose} className="self-end py-2">
-            <Text className="text-gray-500 text-base">Cancel</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
+        <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 16 }}>
+          <Pressable onPress={handleClose} style={{ alignSelf: "flex-end", paddingVertical: 8 }}>
+            <Text style={{ color: "#6b7280", fontSize: 16 }}>Cancel</Text>
           </Pressable>
 
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-5xl mb-6">🎙️</Text>
-            <Text className="text-2xl font-bold text-gray-900 mb-2">
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ fontSize: 48, marginBottom: 24 }}>🎙️</Text>
+            <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827", marginBottom: 8 }}>
               Listen for birds
             </Text>
-            <Text className="text-base text-gray-500 text-center mb-12 px-4">
+            <Text style={{ fontSize: 16, color: "#6b7280", textAlign: "center", marginBottom: 48, paddingHorizontal: 16 }}>
               Hold your phone towards the birdsong. Recording lasts 12 seconds.
             </Text>
 
             <Pressable
               onPress={startRecording}
-              className="w-24 h-24 rounded-full bg-brand-600 items-center justify-center shadow-lg"
+              style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: "#16a34a", alignItems: "center", justifyContent: "center" }}
             >
-              <Text className="text-white text-3xl">●</Text>
+              <Text style={{ color: "#fff", fontSize: 30 }}>●</Text>
             </Pressable>
-            <Text className="text-gray-400 text-sm mt-4">Tap to record</Text>
+            <Text style={{ color: "#9ca3af", fontSize: 14, marginTop: 16 }}>Tap to record</Text>
           </View>
         </View>
       </SafeAreaView>
@@ -210,26 +210,26 @@ export default function RecordScreen() {
 
   if (state.step === "recording") {
     return (
-      <SafeAreaView className="flex-1 bg-surface">
-        <View className="flex-1 items-center justify-center px-6">
-          <View className="w-32 h-32 rounded-full bg-red-500 items-center justify-center mb-6 opacity-80">
-            <Text className="text-white text-4xl">●</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
+          <View style={{ width: 128, height: 128, borderRadius: 64, backgroundColor: "#ef4444", alignItems: "center", justifyContent: "center", marginBottom: 24, opacity: 0.8 }}>
+            <Text style={{ color: "#fff", fontSize: 32 }}>●</Text>
           </View>
-          <Text className="text-2xl font-bold text-gray-900 mb-2">
+          <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827", marginBottom: 8 }}>
             Listening...
           </Text>
-          <Text className="text-4xl font-mono text-brand-700 mb-4">
+          <Text style={{ fontSize: 32, fontFamily: "monospace", color: "#15803d", marginBottom: 16 }}>
             {state.seconds}s
           </Text>
-          <Text className="text-gray-400 text-sm">
+          <Text style={{ color: "#9ca3af", fontSize: 14 }}>
             Keep still and point towards the sound
           </Text>
 
           <Pressable
             onPress={stopRecording}
-            className="mt-12 px-8 py-3 border border-gray-300 rounded-xl"
+            style={{ marginTop: 48, paddingHorizontal: 32, paddingVertical: 12, borderWidth: 1, borderColor: "#d1d5db", borderRadius: 12 }}
           >
-            <Text className="text-gray-600 font-medium">Stop early</Text>
+            <Text style={{ color: "#4b5563", fontWeight: "500" }}>Stop early</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -238,13 +238,13 @@ export default function RecordScreen() {
 
   if (state.step === "analyzing") {
     return (
-      <SafeAreaView className="flex-1 bg-surface">
-        <View className="flex-1 items-center justify-center px-6">
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
           <ActivityIndicator size="large" color="#16a34a" />
-          <Text className="text-xl font-bold text-gray-900 mt-6 mb-2">
+          <Text style={{ fontSize: 20, fontWeight: "bold", color: "#111827", marginTop: 24, marginBottom: 8 }}>
             Identifying...
           </Text>
-          <Text className="text-gray-500 text-base text-center">
+          <Text style={{ color: "#6b7280", fontSize: 16, textAlign: "center" }}>
             Sending audio to BirdNET for analysis
           </Text>
         </View>
@@ -254,16 +254,16 @@ export default function RecordScreen() {
 
   if (state.step === "results") {
     return (
-      <SafeAreaView className="flex-1 bg-surface">
-        <View className="flex-1 px-6 pt-4">
-          <Pressable onPress={handleClose} className="self-end py-2">
-            <Text className="text-gray-500 text-base">Cancel</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
+        <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 16 }}>
+          <Pressable onPress={handleClose} style={{ alignSelf: "flex-end", paddingVertical: 8 }}>
+            <Text style={{ color: "#6b7280", fontSize: 16 }}>Cancel</Text>
           </Pressable>
 
-          <Text className="text-2xl font-bold text-gray-900 mb-2 mt-4">
+          <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827", marginBottom: 8, marginTop: 16 }}>
             What we heard
           </Text>
-          <Text className="text-gray-500 mb-6">
+          <Text style={{ color: "#6b7280", marginBottom: 24 }}>
             Tap a species to log it as a sighting
           </Text>
 
@@ -271,26 +271,26 @@ export default function RecordScreen() {
             <Pressable
               key={i}
               onPress={() => confirmSpecies(pred, state.audioUri, state.lat, state.lng)}
-              className="bg-white rounded-xl p-4 mb-3 border border-gray-100 flex-row items-center justify-between"
+              style={{ backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#f3f4f6", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
             >
-              <View className="flex-1">
-                <Text className="text-base font-semibold text-gray-900">
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}>
                   {pred.common_name}
                 </Text>
                 {pred.scientific_name ? (
-                  <Text className="text-sm text-gray-400 italic">
+                  <Text style={{ fontSize: 14, color: "#9ca3af", fontStyle: "italic" }}>
                     {pred.scientific_name}
                   </Text>
                 ) : null}
               </View>
-              <View className={`px-3 py-1 rounded-full ${
-                pred.confidence >= 0.75 ? "bg-brand-100" :
-                pred.confidence >= 0.5 ? "bg-yellow-100" : "bg-gray-100"
-              }`}>
-                <Text className={`text-sm font-semibold ${
-                  pred.confidence >= 0.75 ? "text-brand-700" :
-                  pred.confidence >= 0.5 ? "text-yellow-700" : "text-gray-600"
-                }`}>
+              <View style={{
+                paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999,
+                backgroundColor: pred.confidence >= 0.75 ? "#dcfce7" : pred.confidence >= 0.5 ? "#fef9c3" : "#f3f4f6",
+              }}>
+                <Text style={{
+                  fontSize: 14, fontWeight: "600",
+                  color: pred.confidence >= 0.75 ? "#15803d" : pred.confidence >= 0.5 ? "#a16207" : "#4b5563",
+                }}>
                   {Math.round(pred.confidence * 100)}%
                 </Text>
               </View>
@@ -298,10 +298,10 @@ export default function RecordScreen() {
           ))}
 
           <Pressable
-            onPress={() => setState({ step: "idle" })}
-            className="mt-4 py-3 items-center"
+            onPress={() => { stopCalledRef.current = false; setState({ step: "idle" }); }}
+            style={{ marginTop: 16, paddingVertical: 12, alignItems: "center" }}
           >
-            <Text className="text-brand-600 font-medium">Try again</Text>
+            <Text style={{ color: "#16a34a", fontWeight: "500" }}>Try again</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -310,13 +310,13 @@ export default function RecordScreen() {
 
   if (state.step === "confirming") {
     return (
-      <SafeAreaView className="flex-1 bg-surface">
-        <View className="flex-1 items-center justify-center px-6">
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
           <ActivityIndicator size="large" color="#16a34a" />
-          <Text className="text-xl font-bold text-gray-900 mt-6 mb-2">
+          <Text style={{ fontSize: 20, fontWeight: "bold", color: "#111827", marginTop: 24, marginBottom: 8 }}>
             Logging sighting...
           </Text>
-          <Text className="text-gray-500 text-base text-center">
+          <Text style={{ color: "#6b7280", fontSize: 16, textAlign: "center" }}>
             {state.prediction.common_name}
           </Text>
         </View>
@@ -326,31 +326,31 @@ export default function RecordScreen() {
 
   if (state.step === "success") {
     return (
-      <SafeAreaView className="flex-1 bg-surface">
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-6xl mb-4">🎉</Text>
-          <Text className="text-2xl font-bold text-gray-900 mb-2">
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
+          <Text style={{ fontSize: 64, marginBottom: 16 }}>🎉</Text>
+          <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827", marginBottom: 8 }}>
             {state.commonName}
           </Text>
-          <View className="bg-brand-50 rounded-2xl px-8 py-6 items-center mb-8">
-            <Text className="text-4xl font-bold text-brand-700">
+          <View style={{ backgroundColor: "#f0fdf4", borderRadius: 16, paddingHorizontal: 32, paddingVertical: 24, alignItems: "center", marginBottom: 32 }}>
+            <Text style={{ fontSize: 36, fontWeight: "bold", color: "#15803d" }}>
               +{state.pointsAwarded}
             </Text>
-            <Text className="text-brand-600 text-sm mt-1">points earned</Text>
+            <Text style={{ color: "#16a34a", fontSize: 14, marginTop: 4 }}>points earned</Text>
           </View>
 
           <Pressable
             onPress={handleClose}
-            className="w-full bg-brand-600 rounded-xl py-4 items-center"
+            style={{ width: "100%", backgroundColor: "#16a34a", borderRadius: 12, paddingVertical: 16, alignItems: "center" }}
           >
-            <Text className="text-white text-base font-semibold">Done</Text>
+            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>Done</Text>
           </Pressable>
 
           <Pressable
-            onPress={() => setState({ step: "idle" })}
-            className="mt-4 py-3"
+            onPress={() => { stopCalledRef.current = false; setState({ step: "idle" }); }}
+            style={{ marginTop: 16, paddingVertical: 12 }}
           >
-            <Text className="text-brand-600 font-medium">Record another</Text>
+            <Text style={{ color: "#16a34a", fontWeight: "500" }}>Record another</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -359,24 +359,24 @@ export default function RecordScreen() {
 
   // Error state
   return (
-    <SafeAreaView className="flex-1 bg-surface">
-      <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-4xl mb-4">😕</Text>
-        <Text className="text-xl font-bold text-gray-900 mb-2">
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
+        <Text style={{ fontSize: 48, marginBottom: 16 }}>😕</Text>
+        <Text style={{ fontSize: 20, fontWeight: "bold", color: "#111827", marginBottom: 8 }}>
           Something went wrong
         </Text>
-        <Text className="text-base text-gray-500 text-center mb-8">
+        <Text style={{ fontSize: 16, color: "#6b7280", textAlign: "center", marginBottom: 32 }}>
           {state.step === "error" ? state.message : "Unknown error"}
         </Text>
 
         <Pressable
-          onPress={() => setState({ step: "idle" })}
-          className="w-full bg-brand-600 rounded-xl py-4 items-center mb-3"
+          onPress={() => { stopCalledRef.current = false; setState({ step: "idle" }); }}
+          style={{ width: "100%", backgroundColor: "#16a34a", borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 12 }}
         >
-          <Text className="text-white text-base font-semibold">Try again</Text>
+          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>Try again</Text>
         </Pressable>
-        <Pressable onPress={handleClose} className="py-3">
-          <Text className="text-gray-500 font-medium">Go back</Text>
+        <Pressable onPress={handleClose} style={{ paddingVertical: 12 }}>
+          <Text style={{ color: "#6b7280", fontWeight: "500" }}>Go back</Text>
         </Pressable>
       </View>
     </SafeAreaView>

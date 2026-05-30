@@ -36,22 +36,19 @@ export default function OnboardingScreen() {
     setLoading(true);
     setError(null);
 
-    const { error: upsertError } = await supabase.from("profiles").upsert(
-      {
-        id: user.id,
-        username: trimmed,
-        display_name: trimmed,
-      },
-      { onConflict: "id" }
-    );
+    // Use update (not upsert) — the profile row already exists from the DB trigger
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ username: trimmed, display_name: trimmed })
+      .eq("id", user.id);
 
     setLoading(false);
 
-    if (upsertError) {
-      if (upsertError.code === "23505") {
+    if (updateError) {
+      if (updateError.code === "23505") {
         setError("Username already taken");
       } else {
-        setError(upsertError.message);
+        setError(updateError.message);
       }
       return;
     }
