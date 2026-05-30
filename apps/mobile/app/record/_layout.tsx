@@ -1,13 +1,5 @@
 import { Stack } from "expo-router";
 
 export default function RecordLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        presentation: "modal",
-        animation: "slide_from_bottom",
-      }}
-    />
-  );
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

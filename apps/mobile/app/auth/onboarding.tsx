@@ -36,7 +36,6 @@ export default function OnboardingScreen() {
     setLoading(true);
     setError(null);
 
-    // Use update (not upsert) — the profile row already exists from the DB trigger
     const { error: updateError } = await supabase
       .from("profiles")
       .update({ username: trimmed, display_name: trimmed })
@@ -60,18 +59,18 @@ export default function OnboardingScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1"
+      style={{ flex: 1 }}
     >
-      <View className="flex-1 items-center justify-center bg-surface px-8">
-        <Text className="text-3xl font-bold text-brand-900 mb-2">
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fafafa", paddingHorizontal: 32 }}>
+        <Text style={{ fontSize: 28, fontWeight: "bold", color: "#14532d", marginBottom: 8 }}>
           Pick a username
         </Text>
-        <Text className="text-base text-gray-500 mb-8 text-center">
+        <Text style={{ fontSize: 16, color: "#6b7280", marginBottom: 32, textAlign: "center" }}>
           This is how other birders will find you
         </Text>
 
         <TextInput
-          className="w-full border border-gray-300 rounded-xl px-4 py-4 text-base mb-4 bg-white"
+          style={{ width: "100%", borderWidth: 1, borderColor: "#d1d5db", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 16, fontSize: 16, marginBottom: 16, backgroundColor: "#fff" }}
           placeholder="e.g. robin_spotter"
           value={username}
           onChangeText={setUsername}
@@ -81,18 +80,18 @@ export default function OnboardingScreen() {
         />
 
         {error && (
-          <Text className="text-red-500 text-sm mb-4">{error}</Text>
+          <Text style={{ color: "#ef4444", fontSize: 14, marginBottom: 16 }}>{error}</Text>
         )}
 
         <Pressable
           onPress={handleSetUsername}
           disabled={loading || !username.trim()}
-          className="w-full bg-brand-600 rounded-xl py-4 items-center disabled:opacity-50"
+          style={{ width: "100%", backgroundColor: "#16a34a", borderRadius: 12, paddingVertical: 16, alignItems: "center", opacity: loading || !username.trim() ? 0.5 : 1 }}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text className="text-white text-base font-semibold">
+            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
               Continue
             </Text>
           )}

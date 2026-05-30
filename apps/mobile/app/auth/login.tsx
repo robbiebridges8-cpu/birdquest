@@ -9,70 +9,59 @@ import {
   Platform,
 } from "react-native";
 import { supabase } from "@/lib/supabase";
-import * as Linking from "expo-linking";
+import { useRouter } from "expo-router";
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const redirectUrl = Linking.createURL("auth/callback");
-
-  async function handleSendLink() {
-    if (!email.trim()) return;
+  async function handleSubmit() {
+    if (!email.trim() || !password.trim()) return;
     setLoading(true);
     setError(null);
 
-    const { error: signInError } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: redirectUrl,
-      },
-    });
-
-    setLoading(false);
-    if (signInError) {
-      setError(signInError.message);
+    if (isSignUp) {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password.trim(),
+      });
+      setLoading(false);
+      if (signUpError) {
+        setError(signUpError.message);
+      }
+      // Auth listener in context will detect the session and index.tsx will redirect
     } else {
-      setSent(true);
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      });
+      setLoading(false);
+      if (signInError) {
+        setError(signInError.message);
+      }
+      // Auth listener handles redirect
     }
-  }
-
-  if (sent) {
-    return (
-      <View className="flex-1 items-center justify-center bg-surface px-8">
-        <Text className="text-3xl font-bold text-brand-900 mb-4">
-          Check your email
-        </Text>
-        <Text className="text-base text-gray-600 text-center mb-8">
-          We sent a magic link to{"\n"}
-          <Text className="font-semibold">{email}</Text>
-        </Text>
-        <Pressable onPress={() => setSent(false)}>
-          <Text className="text-brand-600 text-base font-medium">
-            Use a different email
-          </Text>
-        </Pressable>
-      </View>
-    );
   }
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1"
+      style={{ flex: 1 }}
     >
-      <View className="flex-1 items-center justify-center bg-surface px-8">
-        <Text className="text-4xl font-bold text-brand-900 mb-2">
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fafafa", paddingHorizontal: 32 }}>
+        <Text style={{ fontSize: 36, fontWeight: "bold", color: "#14532d", marginBottom: 8 }}>
           BirdQuest
         </Text>
-        <Text className="text-base text-gray-500 mb-12">
+        <Text style={{ fontSize: 16, color: "#6b7280", marginBottom: 48 }}>
           Log birds. Earn points. Explore.
         </Text>
 
         <TextInput
-          className="w-full border border-gray-300 rounded-xl px-4 py-4 text-base mb-4 bg-white"
+          style={{ width: "100%", borderWidth: 1, borderColor: "#d1d5db", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 16, fontSize: 16, marginBottom: 16, backgroundColor: "#fff" }}
           placeholder="Enter your email"
           value={email}
           onChangeText={setEmail}
@@ -82,22 +71,38 @@ export default function LoginScreen() {
           editable={!loading}
         />
 
+        <TextInput
+          style={{ width: "100%", borderWidth: 1, borderColor: "#d1d5db", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 16, fontSize: 16, marginBottom: 16, backgroundColor: "#fff" }}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          editable={!loading}
+        />
+
         {error && (
-          <Text className="text-red-500 text-sm mb-4">{error}</Text>
+          <Text style={{ color: "#ef4444", fontSize: 14, marginBottom: 16 }}>{error}</Text>
         )}
 
         <Pressable
-          onPress={handleSendLink}
-          disabled={loading || !email.trim()}
-          className="w-full bg-brand-600 rounded-xl py-4 items-center disabled:opacity-50"
+          onPress={handleSubmit}
+          disabled={loading || !email.trim() || !password.trim()}
+          style={{ width: "100%", backgroundColor: "#16a34a", borderRadius: 12, paddingVertical: 16, alignItems: "center", opacity: loading || !email.trim() || !password.trim() ? 0.5 : 1 }}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text className="text-white text-base font-semibold">
-              Send magic link
+            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
+              {isSignUp ? "Sign up" : "Sign in"}
             </Text>
           )}
+        </Pressable>
+
+        <Pressable onPress={() => { setIsSignUp(!isSignUp); setError(null); }} style={{ marginTop: 16 }}>
+          <Text style={{ color: "#16a34a", fontSize: 16, fontWeight: "500" }}>
+            {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
+          </Text>
         </Pressable>
       </View>
     </KeyboardAvoidingView>

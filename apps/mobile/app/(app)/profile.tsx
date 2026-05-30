@@ -16,29 +16,31 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
-      <View className="flex-1 px-6 pt-8">
-        <Text className="text-2xl font-bold text-gray-900 mb-6">Profile</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 32 }}>
+        <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827", marginBottom: 24 }}>
+          Profile
+        </Text>
 
-        <View className="bg-white rounded-2xl p-6 border border-gray-100 mb-6">
-          <Text className="text-lg font-semibold text-gray-900">
+        <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 24, borderWidth: 1, borderColor: "#f3f4f6", marginBottom: 24 }}>
+          <Text style={{ fontSize: 18, fontWeight: "600", color: "#111827" }}>
             @{profile?.username ?? "..."}
           </Text>
-          {profile?.display_name && (
-            <Text className="text-gray-500 mt-1">{profile.display_name}</Text>
-          )}
-          <Text className="text-brand-600 text-sm mt-2 font-medium">
+          {profile?.display_name && profile.display_name !== profile.username ? (
+            <Text style={{ color: "#6b7280", marginTop: 4 }}>{profile.display_name}</Text>
+          ) : null}
+          <Text style={{ color: "#16a34a", fontSize: 14, marginTop: 8, fontWeight: "500" }}>
             {getTierLabel(profile?.tier ?? "novice")} — {profile?.total_points?.toLocaleString() ?? "0"} pts
           </Text>
         </View>
 
-        <View className="flex-1" />
+        <View style={{ flex: 1 }} />
 
         <Pressable
           onPress={handleSignOut}
-          className="w-full border border-red-300 rounded-xl py-4 items-center mb-8"
+          style={{ width: "100%", borderWidth: 1, borderColor: "#fca5a5", borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 32 }}
         >
-          <Text className="text-red-600 text-base font-semibold">
+          <Text style={{ color: "#dc2626", fontSize: 16, fontWeight: "600" }}>
             Sign out
           </Text>
         </Pressable>

@@ -1,13 +1,7 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useProfile, getTierLabel } from "@/lib/use-profile";
-
-function SkeletonBlock({ className }: { className?: string }) {
-  return (
-    <View className={`bg-gray-200 rounded-lg animate-pulse ${className ?? ""}`} />
-  );
-}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -15,11 +9,11 @@ export default function HomeScreen() {
 
   if (error) {
     return (
-      <SafeAreaView className="flex-1 bg-surface items-center justify-center px-8">
-        <Text className="text-red-500 text-base text-center">
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa", alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
+        <Text style={{ color: "#ef4444", fontSize: 16, textAlign: "center" }}>
           Something went wrong loading your profile.
         </Text>
-        <Text className="text-gray-400 text-sm mt-2">
+        <Text style={{ color: "#9ca3af", fontSize: 14, marginTop: 8 }}>
           {(error as Error).message}
         </Text>
       </SafeAreaView>
@@ -27,34 +21,29 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
-      <View className="flex-1 px-6 pt-8">
-        {/* Header */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 32 }}>
         {isLoading ? (
-          <SkeletonBlock className="h-8 w-64 mb-8" />
+          <ActivityIndicator size="small" color="#16a34a" style={{ alignSelf: "flex-start", marginBottom: 32 }} />
         ) : (
-          <Text className="text-2xl font-bold text-gray-900 mb-8">
+          <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827", marginBottom: 32 }}>
             Welcome back, {profile?.username ?? "birder"}
           </Text>
         )}
 
-        {/* Points card */}
-        <View className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 items-center mb-6">
+        <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 32, borderWidth: 1, borderColor: "#f3f4f6", alignItems: "center", marginBottom: 24 }}>
           {isLoading ? (
-            <>
-              <SkeletonBlock className="h-16 w-40 mb-3" />
-              <SkeletonBlock className="h-5 w-24" />
-            </>
+            <ActivityIndicator size="large" color="#16a34a" />
           ) : (
             <>
-              <Text className="text-6xl font-bold text-brand-700">
+              <Text style={{ fontSize: 56, fontWeight: "bold", color: "#15803d" }}>
                 {profile?.total_points?.toLocaleString() ?? "0"}
               </Text>
-              <Text className="text-sm text-gray-400 mt-1 uppercase tracking-wide">
+              <Text style={{ fontSize: 14, color: "#9ca3af", marginTop: 4, textTransform: "uppercase", letterSpacing: 1 }}>
                 points
               </Text>
-              <View className="mt-4 bg-brand-50 rounded-full px-4 py-1.5">
-                <Text className="text-brand-700 font-semibold text-sm">
+              <View style={{ marginTop: 16, backgroundColor: "#f0fdf4", borderRadius: 999, paddingHorizontal: 16, paddingVertical: 6 }}>
+                <Text style={{ color: "#15803d", fontWeight: "600", fontSize: 14 }}>
                   {getTierLabel(profile?.tier ?? "novice")}
                 </Text>
               </View>
@@ -62,15 +51,13 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Spacer */}
-        <View className="flex-1" />
+        <View style={{ flex: 1 }} />
 
-        {/* CTA button */}
         <Pressable
           onPress={() => router.push("/record")}
-          className="w-full bg-brand-600 rounded-xl py-4 items-center mb-8"
+          style={{ width: "100%", backgroundColor: "#16a34a", borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 32 }}
         >
-          <Text className="text-white text-base font-semibold">
+          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
             🎙️  Log a sighting
           </Text>
         </Pressable>
