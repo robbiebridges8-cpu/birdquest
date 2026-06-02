@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import Constants from "expo-constants";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { useQuery } from "@tanstack/react-query";
@@ -67,7 +68,8 @@ function useRareSightings(userId: string | undefined) {
   });
 }
 
-export default function MapScreen() {
+// All hooks live here — only mounted when NOT in Expo Go
+function MapContent() {
   const { user } = useAuth();
   const { data: mySightings, isLoading } = useMyMapSightings(user?.id);
   const [showRare, setShowRare] = useState(true);
@@ -134,14 +136,7 @@ export default function MapScreen() {
       </MapView>
 
       {/* Top controls */}
-      <View style={{
-        position: "absolute",
-        top: 56,
-        left: 16,
-        right: 16,
-        flexDirection: "row",
-        gap: 8,
-      }}>
+      <View style={{ position: "absolute", top: 56, left: 16, right: 16, flexDirection: "row", gap: 8 }}>
         <Pressable
           onPress={() => setShowRare((v) => !v)}
           style={{
@@ -158,16 +153,10 @@ export default function MapScreen() {
             elevation: 4,
           }}
         >
-          <Text style={{
-            color: showRare ? "#a78bfa" : C.textSecondary,
-            fontWeight: "700",
-            fontSize: 13,
-            letterSpacing: 0.3,
-          }}>
+          <Text style={{ color: showRare ? "#a78bfa" : C.textSecondary, fontWeight: "700", fontSize: 13 }}>
             Nearby rare birds
           </Text>
         </Pressable>
-
         {isLoading && (
           <View style={{
             backgroundColor: C.surface,
@@ -177,9 +166,6 @@ export default function MapScreen() {
             borderWidth: 1,
             borderColor: C.border,
             justifyContent: "center",
-            shadowColor: "#000",
-            shadowOpacity: 0.3,
-            shadowRadius: 6,
             elevation: 4,
           }}>
             <ActivityIndicator size="small" color={C.green} />
@@ -197,10 +183,6 @@ export default function MapScreen() {
         padding: 12,
         borderWidth: 1,
         borderColor: C.border,
-        shadowColor: "#000",
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 4,
         gap: 7,
       }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -214,4 +196,23 @@ export default function MapScreen() {
       </View>
     </View>
   );
+}
+
+const isExpoGo = Constants.appOwnership === "expo";
+
+export default function MapScreen() {
+  if (isExpoGo) {
+    return (
+      <View style={{ flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
+        <Text style={{ fontSize: 36, marginBottom: 20 }}>🗺️</Text>
+        <Text style={{ fontSize: 20, fontWeight: "800", color: C.textPrimary, marginBottom: 10, textAlign: "center" }}>
+          Map needs a dev build
+        </Text>
+        <Text style={{ fontSize: 14, color: C.textSecondary, textAlign: "center", lineHeight: 22 }}>
+          Native maps aren't available in Expo Go.{"\n"}Build with EAS to enable this tab.
+        </Text>
+      </View>
+    );
+  }
+  return <MapContent />;
 }
