@@ -1,10 +1,11 @@
-import { View, Text, FlatList, ActivityIndicator } from "react-native";
+import { View, FlatList, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { getTierLabel } from "@/lib/use-profile";
-import { C } from "@/lib/theme";
+import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/utils";
 
 interface LeaderboardEntry {
   id: string;
@@ -39,27 +40,28 @@ function useLeaderboard() {
 }
 
 const MEDALS = ["🥇", "🥈", "🥉"];
-const RANK_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
 
 export default function LeaderboardScreen() {
   const { user } = useAuth();
   const { data, isLoading, error } = useLeaderboard();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
-      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
-        <Text style={{ fontSize: 26, fontWeight: "800", color: C.textPrimary, marginBottom: 24 }}>
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="flex-1 px-6 pt-6">
+        <Text variant="h3" className="mb-6 text-left tracking-tight">
           Rankings
         </Text>
 
         {isLoading && (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <ActivityIndicator size="large" color={C.green} />
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="hsl(142, 71%, 45%)" />
           </View>
         )}
 
         {error && (
-          <Text style={{ color: "#f87171", textAlign: "center" }}>{(error as Error).message}</Text>
+          <Text className="text-destructive text-center">
+            {(error as Error).message}
+          </Text>
         )}
 
         {data && (
@@ -70,49 +72,53 @@ export default function LeaderboardScreen() {
             renderItem={({ item, index }) => {
               const isMe = item.id === user?.id;
               const isTop3 = index < 3;
+
               return (
                 <View
-                  style={{
-                    backgroundColor: isMe ? C.surface2 : C.surface,
-                    borderRadius: 10,
-                    padding: 14,
-                    marginBottom: 6,
-                    borderWidth: 1,
-                    borderColor: isMe ? C.borderBright : C.border,
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}
+                  className={cn(
+                    "flex-row items-center rounded-lg border border-border px-4 py-3 mb-1.5",
+                    isMe ? "bg-secondary border-primary/30" : "bg-card"
+                  )}
                 >
                   {/* Rank */}
-                  <View style={{ width: 36, alignItems: "center" }}>
+                  <View className="w-9 items-center mr-1">
                     {isTop3 ? (
-                      <Text style={{ fontSize: 20 }}>{MEDALS[index]}</Text>
+                      <Text className="text-xl leading-tight">{MEDALS[index]}</Text>
                     ) : (
-                      <Text style={{ fontSize: 14, fontWeight: "700", color: C.textMuted }}>
+                      <Text className="text-sm font-bold text-muted-foreground">
                         {index + 1}
                       </Text>
                     )}
                   </View>
 
                   {/* Name + tier */}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: "700", color: C.textPrimary }}>
+                  <View className="flex-1">
+                    <Text
+                      className={cn(
+                        "text-sm font-bold",
+                        isMe ? "text-primary" : "text-foreground"
+                      )}
+                    >
                       @{item.username}
                       {isMe ? (
-                        <Text style={{ color: C.green, fontWeight: "700" }}> ← you</Text>
+                        <Text className="text-primary font-normal"> ← you</Text>
                       ) : null}
                     </Text>
-                    <Text style={{ fontSize: 11, color: C.textMuted, marginTop: 2, letterSpacing: 0.3 }}>
-                      {getTierLabel(getTierFromPoints(item.total_points)).toUpperCase()}
+                    <Text className="text-xs text-muted-foreground tracking-wide uppercase mt-0.5">
+                      {getTierLabel(getTierFromPoints(item.total_points))}
                     </Text>
                   </View>
 
                   {/* Points */}
-                  <Text style={{
-                    fontSize: 17,
-                    fontWeight: "800",
-                    color: isTop3 ? RANK_COLORS[index] : C.textSecondary,
-                  }}>
+                  <Text
+                    className={cn(
+                      "text-base font-extrabold",
+                      index === 0 && "text-gold",
+                      index === 1 && "text-forest-faded",
+                      index === 2 && "text-forest-muted",
+                      !isTop3 && "text-muted-foreground"
+                    )}
+                  >
                     {item.total_points.toLocaleString()}
                   </Text>
                 </View>

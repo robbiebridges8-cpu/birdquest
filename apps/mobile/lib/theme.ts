@@ -1,3 +1,9 @@
+/**
+ * @deprecated Use Tailwind tokens via className instead.
+ * Semantic colours: bg-background, text-foreground, bg-primary, border-border, etc.
+ * Brand palette: bg-forest-dark, text-forest-muted, text-gold, bg-secondary, etc.
+ * This file will be removed once all screens are migrated off inline styles.
+ */
 export const C = {
   bg:           "#080d09",
   surface:      "#0f1a12",
