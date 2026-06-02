@@ -3,6 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
+import { getRarity } from "@/lib/rarity";
 
 interface SightingRow {
   id: string;
@@ -12,9 +13,11 @@ interface SightingRow {
   verification_status: string;
   species: {
     common_name: string;
+    scientific_name: string;
     ebird_code: string;
   } | null;
 }
+
 
 function useMySightings() {
   const { user } = useAuth();
@@ -24,7 +27,7 @@ function useMySightings() {
       if (!user) return [];
       const { data, error } = await supabase
         .from("sightings")
-        .select("id, observed_at, points_awarded, confidence, verification_status, species:species_id(common_name, ebird_code)")
+        .select("id, observed_at, points_awarded, confidence, verification_status, species:species_id(common_name, scientific_name, ebird_code)")
         .eq("user_id", user.id)
         .order("observed_at", { ascending: false })
         .limit(50);
@@ -79,24 +82,37 @@ export default function FeedScreen() {
             data={sightings}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <View style={{ backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#f3f4f6", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}>
-                    {item.species?.common_name ?? "Unknown species"}
-                  </Text>
-                  <Text style={{ fontSize: 14, color: "#9ca3af", marginTop: 2 }}>
-                    {formatDate(item.observed_at)}
-                    {item.confidence != null && ` · ${Math.round(item.confidence * 100)}% conf`}
-                  </Text>
+            renderItem={({ item }) => {
+              const rarity = getRarity(item.points_awarded);
+              return (
+                <View style={{ backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#f3f4f6" }}>
+                  <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
+                    <View style={{ flex: 1, marginRight: 12 }}>
+                      <Text style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}>
+                        {item.species?.common_name ?? "Unknown species"}
+                      </Text>
+                      {item.species?.scientific_name ? (
+                        <Text style={{ fontSize: 13, color: "#9ca3af", fontStyle: "italic", marginTop: 1 }}>
+                          {item.species.scientific_name}
+                        </Text>
+                      ) : null}
+                      <Text style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>
+                        {formatDate(item.observed_at)}
+                        {item.confidence != null && ` · ${Math.round(item.confidence * 100)}% conf`}
+                      </Text>
+                    </View>
+                    <View style={{ alignItems: "flex-end", gap: 6 }}>
+                      <View style={{ backgroundColor: "#f0fdf4", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
+                        <Text style={{ color: "#15803d", fontWeight: "bold", fontSize: 13 }}>+{item.points_awarded}</Text>
+                      </View>
+                      <View style={{ backgroundColor: rarity.bg, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
+                        <Text style={{ color: rarity.color, fontWeight: "600", fontSize: 12 }}>{rarity.label}</Text>
+                      </View>
+                    </View>
+                  </View>
                 </View>
-                <View style={{ backgroundColor: "#f0fdf4", borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 }}>
-                  <Text style={{ color: "#15803d", fontWeight: "bold", fontSize: 14 }}>
-                    +{item.points_awarded}
-                  </Text>
-                </View>
-              </View>
-            )}
+              );
+            }}
           />
         )}
       </View>

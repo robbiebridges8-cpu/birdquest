@@ -17,9 +17,11 @@ export interface BirdNetResponse {
   error?: string;
 }
 
-// In dev, the phone hits the Mac's local IP. Update this if your IP changes.
-// TODO: move to env var for production
-const BIRDNET_SERVER_URL = "http://192.168.0.121:8080/analyze";
+// Set EXPO_PUBLIC_BIRDNET_URL in .env.local to your Mac's local IP, e.g.:
+//   EXPO_PUBLIC_BIRDNET_URL=http://192.168.1.42:8080
+const BIRDNET_BASE_URL =
+  process.env.EXPO_PUBLIC_BIRDNET_URL ?? "http://localhost:8080";
+const BIRDNET_SERVER_URL = `${BIRDNET_BASE_URL}/analyze`;
 
 export async function analyzeBirdAudio(
   audioUri: string,
