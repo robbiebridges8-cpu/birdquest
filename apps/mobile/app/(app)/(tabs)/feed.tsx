@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { getRarity } from "@/lib/rarity";
+import { C } from "@/lib/theme";
 
 interface SightingRow {
   id: string;
@@ -18,7 +19,6 @@ interface SightingRow {
     ebird_code: string;
   } | null;
 }
-
 
 function useMySightings() {
   const { user } = useAuth();
@@ -49,20 +49,20 @@ export default function FeedScreen() {
   const { data: sightings, isLoading, error } = useMySightings();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
-      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 32 }}>
-        <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827", marginBottom: 24 }}>
-          Your Sightings
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
+        <Text style={{ fontSize: 26, fontWeight: "800", color: C.textPrimary, marginBottom: 24 }}>
+          Sightings
         </Text>
 
         {isLoading && (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <ActivityIndicator size="large" color="#16a34a" />
+            <ActivityIndicator size="large" color={C.green} />
           </View>
         )}
 
         {error && (
-          <Text style={{ color: "#ef4444", textAlign: "center" }}>
+          <Text style={{ color: "#f87171", textAlign: "center" }}>
             {(error as Error).message}
           </Text>
         )}
@@ -70,11 +70,11 @@ export default function FeedScreen() {
         {!isLoading && sightings?.length === 0 && (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <Text style={{ fontSize: 48, marginBottom: 16 }}>🐦</Text>
-            <Text style={{ fontSize: 18, fontWeight: "600", color: "#374151", marginBottom: 8 }}>
-              No sightings yet
+            <Text style={{ fontSize: 18, fontWeight: "700", color: C.textPrimary, marginBottom: 8 }}>
+              Nothing logged yet
             </Text>
-            <Text style={{ color: "#6b7280", textAlign: "center" }}>
-              Record some birdsong from the home screen to log your first sighting.
+            <Text style={{ color: C.textSecondary, textAlign: "center", lineHeight: 22 }}>
+              Head outside and record some birdsong from the home screen.
             </Text>
           </View>
         )}
@@ -89,29 +89,48 @@ export default function FeedScreen() {
               return (
                 <Pressable
                   onPress={() => router.push(`/sighting/${item.id}`)}
-                  style={{ backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#f3f4f6" }}
+                  style={{
+                    backgroundColor: C.surface,
+                    borderRadius: 10,
+                    marginBottom: 8,
+                    borderWidth: 1,
+                    borderColor: C.border,
+                    flexDirection: "row",
+                    overflow: "hidden",
+                  }}
                 >
-                  <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
+                  {/* Left rarity accent */}
+                  <View style={{ width: 3, backgroundColor: rarity.color }} />
+
+                  <View style={{ flex: 1, padding: 14, flexDirection: "row", alignItems: "center" }}>
                     <View style={{ flex: 1, marginRight: 12 }}>
-                      <Text style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}>
+                      <Text style={{ fontSize: 15, fontWeight: "700", color: C.textPrimary }}>
                         {item.species?.common_name ?? "Unknown species"}
                       </Text>
                       {item.species?.scientific_name ? (
-                        <Text style={{ fontSize: 13, color: "#9ca3af", fontStyle: "italic", marginTop: 1 }}>
+                        <Text style={{ fontSize: 12, color: C.textMuted, fontStyle: "italic", marginTop: 1 }}>
                           {item.species.scientific_name}
                         </Text>
                       ) : null}
-                      <Text style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>
+                      <Text style={{ fontSize: 12, color: C.textMuted, marginTop: 5 }}>
                         {formatDate(item.observed_at)}
-                        {item.confidence != null && ` · ${Math.round(item.confidence * 100)}% conf`}
+                        {item.confidence != null && ` · ${Math.round(item.confidence * 100)}%`}
                       </Text>
                     </View>
-                    <View style={{ alignItems: "flex-end", gap: 6 }}>
-                      <View style={{ backgroundColor: "#f0fdf4", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
-                        <Text style={{ color: "#15803d", fontWeight: "bold", fontSize: 13 }}>+{item.points_awarded}</Text>
-                      </View>
-                      <View style={{ backgroundColor: rarity.bg, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
-                        <Text style={{ color: rarity.color, fontWeight: "600", fontSize: 12 }}>{rarity.label}</Text>
+
+                    <View style={{ alignItems: "flex-end", gap: 5 }}>
+                      <Text style={{ fontSize: 15, fontWeight: "800", color: C.gold }}>
+                        +{item.points_awarded}
+                      </Text>
+                      <View style={{
+                        backgroundColor: rarity.bg,
+                        borderRadius: 999,
+                        paddingHorizontal: 8,
+                        paddingVertical: 2,
+                      }}>
+                        <Text style={{ color: rarity.color, fontWeight: "700", fontSize: 11, letterSpacing: 0.3 }}>
+                          {rarity.label.toUpperCase()}
+                        </Text>
                       </View>
                     </View>
                   </View>

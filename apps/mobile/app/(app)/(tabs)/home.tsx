@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useProfile, getTierLabel } from "@/lib/use-profile";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
+import { C } from "@/lib/theme";
 
 function useSightingStats() {
   const { user } = useAuth();
@@ -38,10 +39,8 @@ const TIER_PROGRESS: Record<string, { prevMin: number; next: number | null; next
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { data: profile, isLoading, error } = useProfile();
+  const { data: profile, isLoading } = useProfile();
   const { data: stats } = useSightingStats();
-  const speciesCount = stats?.speciesCount ?? 0;
-  const sightingsCount = stats?.sightingsCount ?? 0;
 
   const points = profile?.total_points ?? 0;
   const tier = profile?.tier ?? "novice";
@@ -50,89 +49,147 @@ export default function HomeScreen() {
     ? Math.min(1, (points - tierProgress.prevMin) / (tierProgress.next - tierProgress.prevMin))
     : 1;
 
-  if (error) {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa", alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-        <Text style={{ color: "#ef4444", fontSize: 16, textAlign: "center" }}>
-          Something went wrong loading your profile.
-        </Text>
-        <Text style={{ color: "#9ca3af", fontSize: 14, marginTop: 8 }}>
-          {(error as Error).message}
-        </Text>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
-      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 32 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
+
+        {/* Greeting */}
         {isLoading ? (
-          <ActivityIndicator size="small" color="#16a34a" style={{ alignSelf: "flex-start", marginBottom: 32 }} />
+          <View style={{ height: 20, marginBottom: 32 }} />
         ) : (
-          <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827", marginBottom: 32 }}>
+          <Text style={{ fontSize: 13, color: C.textMuted, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 32 }}>
             Welcome back, {profile?.username ?? "birder"}
           </Text>
         )}
 
-        <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 32, borderWidth: 1, borderColor: "#f3f4f6", alignItems: "center", marginBottom: 24 }}>
+        {/* Points hero */}
+        <View style={{
+          backgroundColor: C.surface,
+          borderRadius: 10,
+          borderWidth: 1,
+          borderColor: C.border,
+          paddingVertical: 36,
+          alignItems: "center",
+          marginBottom: 12,
+        }}>
           {isLoading ? (
-            <ActivityIndicator size="large" color="#16a34a" />
+            <ActivityIndicator size="large" color={C.green} />
           ) : (
             <>
-              <Text style={{ fontSize: 56, fontWeight: "bold", color: "#15803d" }}>
-                {profile?.total_points?.toLocaleString() ?? "0"}
+              <Text style={{ fontSize: 80, fontWeight: "800", color: C.gold, lineHeight: 84 }}>
+                {points.toLocaleString()}
               </Text>
-              <Text style={{ fontSize: 14, color: "#9ca3af", marginTop: 4, textTransform: "uppercase", letterSpacing: 1 }}>
+              <Text style={{
+                fontSize: 11,
+                color: C.textMuted,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                marginTop: 4,
+                marginBottom: 16,
+              }}>
                 points
               </Text>
-              <View style={{ marginTop: 16, backgroundColor: "#f0fdf4", borderRadius: 999, paddingHorizontal: 16, paddingVertical: 6 }}>
-                <Text style={{ color: "#15803d", fontWeight: "600", fontSize: 14 }}>
-                  {getTierLabel(profile?.tier ?? "novice")}
+              <View style={{
+                backgroundColor: C.greenFaint,
+                borderRadius: 999,
+                paddingHorizontal: 14,
+                paddingVertical: 5,
+                borderWidth: 1,
+                borderColor: C.greenDim,
+              }}>
+                <Text style={{ color: C.green, fontWeight: "700", fontSize: 13, letterSpacing: 0.3 }}>
+                  {getTierLabel(tier)}
                 </Text>
               </View>
             </>
           )}
         </View>
 
-        <View style={{ flexDirection: "row", gap: 12, marginBottom: 16 }}>
-          <View style={{ flex: 1, backgroundColor: "#fff", borderRadius: 12, padding: 16, borderWidth: 1, borderColor: "#f3f4f6", alignItems: "center" }}>
-            <Text style={{ fontSize: 28, fontWeight: "bold", color: "#111827" }}>{speciesCount}</Text>
-            <Text style={{ fontSize: 12, color: "#9ca3af", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.5 }}>species</Text>
+        {/* Stats row */}
+        <View style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}>
+          <View style={{
+            flex: 1,
+            backgroundColor: C.surface,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: C.border,
+            padding: 16,
+            alignItems: "center",
+          }}>
+            <Text style={{ fontSize: 32, fontWeight: "800", color: C.textPrimary }}>
+              {stats?.speciesCount ?? "—"}
+            </Text>
+            <Text style={{ fontSize: 11, color: C.textMuted, marginTop: 3, textTransform: "uppercase", letterSpacing: 1 }}>
+              species
+            </Text>
           </View>
-          <View style={{ flex: 1, backgroundColor: "#fff", borderRadius: 12, padding: 16, borderWidth: 1, borderColor: "#f3f4f6", alignItems: "center" }}>
-            <Text style={{ fontSize: 28, fontWeight: "bold", color: "#111827" }}>{sightingsCount}</Text>
-            <Text style={{ fontSize: 12, color: "#9ca3af", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.5 }}>sightings</Text>
+          <View style={{
+            flex: 1,
+            backgroundColor: C.surface,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: C.border,
+            padding: 16,
+            alignItems: "center",
+          }}>
+            <Text style={{ fontSize: 32, fontWeight: "800", color: C.textPrimary }}>
+              {stats?.sightingsCount ?? "—"}
+            </Text>
+            <Text style={{ fontSize: 11, color: C.textMuted, marginTop: 3, textTransform: "uppercase", letterSpacing: 1 }}>
+              sightings
+            </Text>
           </View>
         </View>
 
+        {/* Progress bar */}
         {!isLoading && (
-          <View style={{ backgroundColor: "#fff", borderRadius: 12, padding: 16, borderWidth: 1, borderColor: "#f3f4f6", marginBottom: 24 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-              <Text style={{ fontSize: 13, fontWeight: "600", color: "#374151" }}>
+          <View style={{
+            backgroundColor: C.surface,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: C.border,
+            padding: 16,
+            marginBottom: 24,
+          }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: C.textSecondary, letterSpacing: 0.3 }}>
                 {getTierLabel(tier)}
               </Text>
               {tierProgress.next ? (
-                <Text style={{ fontSize: 13, color: "#9ca3af" }}>
-                  {(tierProgress.next - points).toLocaleString()} pts to {tierProgress.nextLabel}
+                <Text style={{ fontSize: 12, color: C.textMuted }}>
+                  {(tierProgress.next - points).toLocaleString()} to {tierProgress.nextLabel}
                 </Text>
               ) : (
-                <Text style={{ fontSize: 13, color: "#15803d", fontWeight: "600" }}>Max rank!</Text>
+                <Text style={{ fontSize: 12, color: C.green, fontWeight: "700" }}>Max rank</Text>
               )}
             </View>
-            <View style={{ height: 8, backgroundColor: "#f3f4f6", borderRadius: 4, overflow: "hidden" }}>
-              <View style={{ height: 8, backgroundColor: "#16a34a", borderRadius: 4, width: `${Math.round(progressPct * 100)}%` }} />
+            <View style={{ height: 4, backgroundColor: C.border, borderRadius: 2, overflow: "hidden" }}>
+              <View style={{
+                height: 4,
+                backgroundColor: C.green,
+                borderRadius: 2,
+                width: `${Math.round(progressPct * 100)}%`,
+              }} />
             </View>
           </View>
         )}
 
         <View style={{ flex: 1 }} />
 
+        {/* CTA */}
         <Pressable
           onPress={() => router.push("/record")}
-          style={{ width: "100%", backgroundColor: "#16a34a", borderRadius: 12, paddingVertical: 16, alignItems: "center", marginBottom: 32 }}
+          style={{
+            width: "100%",
+            backgroundColor: C.green,
+            borderRadius: 8,
+            paddingVertical: 18,
+            alignItems: "center",
+            marginBottom: 32,
+          }}
         >
-          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
-            🎙️  Log a sighting
+          <Text style={{ color: "#080d09", fontSize: 16, fontWeight: "800", letterSpacing: 0.3 }}>
+            LOG A SIGHTING
           </Text>
         </Pressable>
       </View>

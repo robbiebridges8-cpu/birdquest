@@ -7,6 +7,7 @@ import { cellToLatLng } from "h3-js";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { getRarity } from "@/lib/rarity";
+import { C } from "@/lib/theme";
 
 interface MapSighting {
   id: string;
@@ -114,10 +115,9 @@ export default function MapScreen() {
             coordinate={{ latitude: s.lat, longitude: s.lng }}
             title={s.species?.common_name ?? "Unknown"}
             description={`+${s.points_awarded} pts`}
-            pinColor="#16a34a"
+            pinColor="#22c55e"
           />
         ))}
-
         {showRare &&
           rareSightings?.map((s) => {
             const rarity = getRarity(s.points_awarded);
@@ -127,90 +127,89 @@ export default function MapScreen() {
                 coordinate={{ latitude: s.lat, longitude: s.lng }}
                 title={`${s.species?.common_name ?? "Unknown"} — ${rarity.label}`}
                 description={`@${(s.profiles as any)?.username ?? "birder"} · +${s.points_awarded} pts`}
-                pinColor="#7c3aed"
+                pinColor="#a78bfa"
               />
             );
           })}
       </MapView>
 
-      {/* Controls overlay */}
-      <View
-        style={{
-          position: "absolute",
-          top: 56,
-          left: 16,
-          right: 16,
-          flexDirection: "row",
-          gap: 8,
-        }}
-      >
+      {/* Top controls */}
+      <View style={{
+        position: "absolute",
+        top: 56,
+        left: 16,
+        right: 16,
+        flexDirection: "row",
+        gap: 8,
+      }}>
         <Pressable
           onPress={() => setShowRare((v) => !v)}
           style={{
-            backgroundColor: showRare ? "#7c3aed" : "#fff",
+            backgroundColor: showRare ? "#1e1040" : C.surface,
             borderRadius: 999,
             paddingHorizontal: 14,
-            paddingVertical: 8,
+            paddingVertical: 9,
             borderWidth: 1,
-            borderColor: showRare ? "#7c3aed" : "#e5e7eb",
+            borderColor: showRare ? "#a78bfa" : C.border,
             shadowColor: "#000",
-            shadowOpacity: 0.12,
-            shadowRadius: 4,
+            shadowOpacity: 0.3,
+            shadowRadius: 6,
             shadowOffset: { width: 0, height: 2 },
-            elevation: 3,
+            elevation: 4,
           }}
         >
-          <Text style={{ color: showRare ? "#fff" : "#374151", fontWeight: "600", fontSize: 13 }}>
+          <Text style={{
+            color: showRare ? "#a78bfa" : C.textSecondary,
+            fontWeight: "700",
+            fontSize: 13,
+            letterSpacing: 0.3,
+          }}>
             Nearby rare birds
           </Text>
         </Pressable>
 
         {isLoading && (
-          <View
-            style={{
-              backgroundColor: "#fff",
-              borderRadius: 999,
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderWidth: 1,
-              borderColor: "#e5e7eb",
-              justifyContent: "center",
-              shadowColor: "#000",
-              shadowOpacity: 0.12,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
-          >
-            <ActivityIndicator size="small" color="#16a34a" />
+          <View style={{
+            backgroundColor: C.surface,
+            borderRadius: 999,
+            paddingHorizontal: 14,
+            paddingVertical: 9,
+            borderWidth: 1,
+            borderColor: C.border,
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOpacity: 0.3,
+            shadowRadius: 6,
+            elevation: 4,
+          }}>
+            <ActivityIndicator size="small" color={C.green} />
           </View>
         )}
       </View>
 
       {/* Legend */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 32,
-          right: 16,
-          backgroundColor: "#fff",
-          borderRadius: 12,
-          padding: 12,
-          borderWidth: 1,
-          borderColor: "#e5e7eb",
-          shadowColor: "#000",
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
-          gap: 6,
-        }}
-      >
+      <View style={{
+        position: "absolute",
+        bottom: 32,
+        right: 16,
+        backgroundColor: C.surface,
+        borderRadius: 10,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: C.border,
+        shadowColor: "#000",
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 4,
+        gap: 7,
+      }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#16a34a" }} />
-          <Text style={{ fontSize: 12, color: "#374151" }}>Your sightings</Text>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#22c55e" }} />
+          <Text style={{ fontSize: 12, color: C.textSecondary, fontWeight: "600" }}>Your sightings</Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#7c3aed" }} />
-          <Text style={{ fontSize: 12, color: "#374151" }}>Rare nearby</Text>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#a78bfa" }} />
+          <Text style={{ fontSize: 12, color: C.textSecondary, fontWeight: "600" }}>Rare nearby</Text>
         </View>
       </View>
     </View>

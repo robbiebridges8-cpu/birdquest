@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { getTierLabel } from "@/lib/use-profile";
+import { C } from "@/lib/theme";
 
 interface LeaderboardEntry {
   id: string;
@@ -38,26 +39,27 @@ function useLeaderboard() {
 }
 
 const MEDALS = ["🥇", "🥈", "🥉"];
+const RANK_COLORS = ["#f59e0b", "#9ca3af", "#b45309"];
 
 export default function LeaderboardScreen() {
   const { user } = useAuth();
   const { data, isLoading, error } = useLeaderboard();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
-      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 32 }}>
-        <Text style={{ fontSize: 24, fontWeight: "bold", color: "#111827", marginBottom: 24 }}>
-          Leaderboard
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
+        <Text style={{ fontSize: 26, fontWeight: "800", color: C.textPrimary, marginBottom: 24 }}>
+          Rankings
         </Text>
 
         {isLoading && (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <ActivityIndicator size="large" color="#16a34a" />
+            <ActivityIndicator size="large" color={C.green} />
           </View>
         )}
 
         {error && (
-          <Text style={{ color: "#ef4444", textAlign: "center" }}>{(error as Error).message}</Text>
+          <Text style={{ color: "#f87171", textAlign: "center" }}>{(error as Error).message}</Text>
         )}
 
         {data && (
@@ -67,31 +69,50 @@ export default function LeaderboardScreen() {
             showsVerticalScrollIndicator={false}
             renderItem={({ item, index }) => {
               const isMe = item.id === user?.id;
+              const isTop3 = index < 3;
               return (
                 <View
                   style={{
-                    backgroundColor: isMe ? "#f0fdf4" : "#fff",
-                    borderRadius: 12,
-                    padding: 16,
-                    marginBottom: 8,
+                    backgroundColor: isMe ? C.surface2 : C.surface,
+                    borderRadius: 10,
+                    padding: 14,
+                    marginBottom: 6,
                     borderWidth: 1,
-                    borderColor: isMe ? "#86efac" : "#f3f4f6",
+                    borderColor: isMe ? C.borderBright : C.border,
                     flexDirection: "row",
                     alignItems: "center",
                   }}
                 >
-                  <Text style={{ width: 36, fontSize: 18, color: index < 3 ? "#111827" : "#9ca3af", fontWeight: "600" }}>
-                    {index < 3 ? MEDALS[index] : `${index + 1}`}
-                  </Text>
+                  {/* Rank */}
+                  <View style={{ width: 36, alignItems: "center" }}>
+                    {isTop3 ? (
+                      <Text style={{ fontSize: 20 }}>{MEDALS[index]}</Text>
+                    ) : (
+                      <Text style={{ fontSize: 14, fontWeight: "700", color: C.textMuted }}>
+                        {index + 1}
+                      </Text>
+                    )}
+                  </View>
+
+                  {/* Name + tier */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 15, fontWeight: "600", color: "#111827" }}>
-                      @{item.username}{isMe ? " (you)" : ""}
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: C.textPrimary }}>
+                      @{item.username}
+                      {isMe ? (
+                        <Text style={{ color: C.green, fontWeight: "700" }}> ← you</Text>
+                      ) : null}
                     </Text>
-                    <Text style={{ fontSize: 12, color: "#9ca3af", marginTop: 1 }}>
-                      {getTierLabel(getTierFromPoints(item.total_points))}
+                    <Text style={{ fontSize: 11, color: C.textMuted, marginTop: 2, letterSpacing: 0.3 }}>
+                      {getTierLabel(getTierFromPoints(item.total_points)).toUpperCase()}
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 16, fontWeight: "bold", color: "#15803d" }}>
+
+                  {/* Points */}
+                  <Text style={{
+                    fontSize: 17,
+                    fontWeight: "800",
+                    color: isTop3 ? RANK_COLORS[index] : C.textSecondary,
+                  }}>
                     {item.total_points.toLocaleString()}
                   </Text>
                 </View>

@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cellToLatLng } from "h3-js";
 import { supabase } from "@/lib/supabase";
 import { getRarity } from "@/lib/rarity";
+import { C } from "@/lib/theme";
 
 interface SightingDetail {
   id: string;
@@ -65,20 +66,16 @@ export default function SightingDetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView
-        style={{ flex: 1, backgroundColor: "#fafafa", alignItems: "center", justifyContent: "center" }}
-      >
-        <ActivityIndicator size="large" color="#16a34a" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" color={C.green} />
       </SafeAreaView>
     );
   }
 
   if (!sighting) {
     return (
-      <SafeAreaView
-        style={{ flex: 1, backgroundColor: "#fafafa", alignItems: "center", justifyContent: "center" }}
-      >
-        <Text style={{ color: "#9ca3af" }}>Sighting not found.</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" }}>
+        <Text style={{ color: C.textMuted }}>Sighting not found.</Text>
       </SafeAreaView>
     );
   }
@@ -87,87 +84,79 @@ export default function SightingDetailScreen() {
   const [lat, lng] = cellToLatLng(sighting.h3_cell_r6);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fafafa" }}>
-      <View
-        style={{
-          paddingHorizontal: 24,
-          paddingTop: 16,
-          flexDirection: "row",
-          alignItems: "center",
-          marginBottom: 8,
-        }}
-      >
-        <Pressable onPress={() => router.back()} style={{ marginRight: 16, padding: 4 }}>
-          <Text style={{ fontSize: 24, color: "#374151" }}>←</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+      {/* Header */}
+      <View style={{
+        paddingHorizontal: 24,
+        paddingTop: 16,
+        paddingBottom: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        borderBottomWidth: 1,
+        borderBottomColor: C.border,
+      }}>
+        <Pressable onPress={() => router.back()} style={{ marginRight: 16 }}>
+          <Text style={{ fontSize: 22, color: C.textSecondary }}>←</Text>
         </Pressable>
-        <Text
-          style={{ fontSize: 18, fontWeight: "700", color: "#111827", flex: 1 }}
-          numberOfLines={1}
-        >
+        <Text style={{ fontSize: 16, fontWeight: "700", color: C.textPrimary, flex: 1 }} numberOfLines={1}>
           {sighting.species?.common_name ?? "Unknown species"}
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}>
-        {/* Header card */}
-        <View
-          style={{
-            backgroundColor: "#fff",
-            borderRadius: 16,
-            padding: 24,
-            borderWidth: 1,
-            borderColor: "#f3f4f6",
-            marginBottom: 16,
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ fontSize: 32, fontWeight: "bold", color: "#111827", textAlign: "center" }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 48 }}>
+        {/* Hero */}
+        <View style={{
+          backgroundColor: C.surface,
+          borderRadius: 10,
+          borderWidth: 1,
+          borderColor: C.border,
+          padding: 28,
+          marginBottom: 16,
+          alignItems: "center",
+        }}>
+          <Text style={{ fontSize: 34, fontWeight: "800", color: C.textPrimary, textAlign: "center", lineHeight: 40 }}>
             {sighting.species?.common_name ?? "Unknown"}
           </Text>
           {sighting.species?.scientific_name && (
-            <Text style={{ fontSize: 16, color: "#9ca3af", fontStyle: "italic", marginTop: 4 }}>
+            <Text style={{ fontSize: 15, color: C.textMuted, fontStyle: "italic", marginTop: 6 }}>
               {sighting.species.scientific_name}
             </Text>
           )}
-          <View style={{ flexDirection: "row", gap: 8, marginTop: 16 }}>
-            <View
-              style={{
-                backgroundColor: "#f0fdf4",
-                borderRadius: 999,
-                paddingHorizontal: 14,
-                paddingVertical: 6,
-              }}
-            >
-              <Text style={{ color: "#15803d", fontWeight: "bold", fontSize: 15 }}>
+
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
+            <View style={{
+              backgroundColor: C.greenFaint,
+              borderRadius: 999,
+              paddingHorizontal: 16,
+              paddingVertical: 6,
+              borderWidth: 1,
+              borderColor: C.greenDim,
+            }}>
+              <Text style={{ color: C.green, fontWeight: "800", fontSize: 16 }}>
                 +{sighting.points_awarded} pts
               </Text>
             </View>
-            <View
-              style={{
-                backgroundColor: rarity.bg,
-                borderRadius: 999,
-                paddingHorizontal: 14,
-                paddingVertical: 6,
-              }}
-            >
-              <Text style={{ color: rarity.color, fontWeight: "600", fontSize: 14 }}>
-                {rarity.label}
+            <View style={{
+              backgroundColor: rarity.bg,
+              borderRadius: 999,
+              paddingHorizontal: 16,
+              paddingVertical: 6,
+            }}>
+              <Text style={{ color: rarity.color, fontWeight: "700", fontSize: 13, letterSpacing: 0.5 }}>
+                {rarity.label.toUpperCase()}
               </Text>
             </View>
           </View>
         </View>
 
         {/* Details */}
-        <View
-          style={{
-            backgroundColor: "#fff",
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: "#f3f4f6",
-            marginBottom: 16,
-            overflow: "hidden",
-          }}
-        >
+        <View style={{
+          backgroundColor: C.surface,
+          borderRadius: 10,
+          borderWidth: 1,
+          borderColor: C.border,
+          overflow: "hidden",
+        }}>
           <DetailRow label="Date" value={formatDate(sighting.observed_at)} />
           <DetailRow
             label="Confidence"
@@ -193,36 +182,24 @@ export default function SightingDetailScreen() {
   );
 }
 
-function DetailRow({
-  label,
-  value,
-  border,
-}: {
-  label: string;
-  value: string;
-  border?: boolean;
-}) {
+function DetailRow({ label, value, border }: { label: string; value: string; border?: boolean }) {
   return (
-    <View
-      style={{
-        paddingHorizontal: 20,
-        paddingVertical: 14,
-        borderTopWidth: border ? 1 : 0,
-        borderTopColor: "#f3f4f6",
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 12,
-          color: "#9ca3af",
-          textTransform: "uppercase",
-          letterSpacing: 0.5,
-          marginBottom: 2,
-        }}
-      >
+    <View style={{
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      borderTopWidth: border ? 1 : 0,
+      borderTopColor: C.border,
+    }}>
+      <Text style={{
+        fontSize: 10,
+        color: C.textMuted,
+        textTransform: "uppercase",
+        letterSpacing: 1,
+        marginBottom: 4,
+      }}>
         {label}
       </Text>
-      <Text style={{ fontSize: 15, color: "#111827", fontWeight: "500" }}>{value}</Text>
+      <Text style={{ fontSize: 14, color: C.textPrimary, fontWeight: "500" }}>{value}</Text>
     </View>
   );
 }
