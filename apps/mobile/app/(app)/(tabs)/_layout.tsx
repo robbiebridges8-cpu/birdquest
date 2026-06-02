@@ -32,6 +32,24 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="map"
+        options={{
+          title: "Map",
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 20, color }}>🗺️</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="leaderboard"
+        options={{
+          title: "Rankings",
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 20, color }}>🏆</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",

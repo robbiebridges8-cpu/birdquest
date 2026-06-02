@@ -17,6 +17,10 @@ export default function AppLayout() {
           animation: "slide_from_bottom",
         }}
       />
+      <Stack.Screen
+        name="sighting/[id]"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

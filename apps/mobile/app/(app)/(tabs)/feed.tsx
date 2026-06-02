@@ -1,5 +1,6 @@
-import { View, Text, FlatList, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
@@ -44,6 +45,7 @@ function formatDate(iso: string): string {
 }
 
 export default function FeedScreen() {
+  const router = useRouter();
   const { data: sightings, isLoading, error } = useMySightings();
 
   return (
@@ -85,7 +87,10 @@ export default function FeedScreen() {
             renderItem={({ item }) => {
               const rarity = getRarity(item.points_awarded);
               return (
-                <View style={{ backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#f3f4f6" }}>
+                <Pressable
+                  onPress={() => router.push(`/sighting/${item.id}`)}
+                  style={{ backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#f3f4f6" }}
+                >
                   <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
                     <View style={{ flex: 1, marginRight: 12 }}>
                       <Text style={{ fontSize: 16, fontWeight: "600", color: "#111827" }}>
@@ -110,7 +115,7 @@ export default function FeedScreen() {
                       </View>
                     </View>
                   </View>
-                </View>
+                </Pressable>
               );
             }}
           />
